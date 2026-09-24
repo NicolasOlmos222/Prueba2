@@ -74,6 +74,21 @@ app.delete('/api/visitors/:id', async (req, res) => {
 });
 
 // Iniciar servidor tras inicializar DB
+const path = require('path');
+const frontendDist = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
+
+// Fallback SPA para rutas web si el frontend está compilado junto al backend
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+    return next();
+  }
+  const indexPath = path.join(frontendDist, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) next();
+  });
+});
+
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`[PROA BACKEND] Servidor corriendo en el puerto ${PORT}`);
   await initDatabase();
